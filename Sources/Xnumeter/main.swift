@@ -18,10 +18,10 @@ struct Config {
 }
 
 let usageText = """
-syspeek - zero-dependency macOS system monitor in the terminal
+xnumeter - zero-dependency macOS system monitor in the terminal
 
 USAGE
-  syspeek [options]
+  xnumeter [options]
 
 MODES
   (default)     live TUI, redraws every interval
@@ -42,7 +42,7 @@ KEYS
 """
 
 func fail(_ message: String) -> Never {
-    FileHandle.standardError.write("syspeek: \(message)\n".data(using: .utf8)!)
+    FileHandle.standardError.write("xnumeter: \(message)\n".data(using: .utf8)!)
     exit(2)
 }
 

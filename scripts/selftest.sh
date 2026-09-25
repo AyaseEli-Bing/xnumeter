@@ -1,9 +1,9 @@
 #!/bin/bash
-# Evidence check for syspeek: does it agree with the OS's own tools?
+# Evidence check for xnumeter: does it agree with the OS's own tools?
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-BIN=./syspeek
+BIN=./xnumeter
 # Without this, a missing binary returns 127, which satisfies every "must exit non-zero"
 # assertion below and prints three green lines for a program that was never built.
 [ -x "$BIN" ] || { echo "FAIL: $BIN not built (run 'make')"; exit 1; }
@@ -15,7 +15,7 @@ bad() { printf '  FAIL %s\n' "$1"; fail=1; }
 
 # Fixed, guessable /tmp names would let another local user pre-create a symlink, and a
 # stale file from an earlier run would be parsed as if it had just been produced.
-WORK=$(mktemp -d "${TMPDIR:-/tmp}/syspeek-selftest.XXXXXX") || exit 1
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/xnumeter-selftest.XXXXXX") || exit 1
 LOADED_PIDS=""
 cleanup() {
     [ -n "$LOADED_PIDS" ] && kill $LOADED_PIDS 2>/dev/null
@@ -85,10 +85,10 @@ def netstat_link(name):
     for line in lines[1:]:
         f = line.split()
         if len(f) >= max(rx_off, tx_off) and f[0].rstrip("*") == name and f[2].startswith("<Link#"):
-            # syspeek reads NET_RT_IFLIST2, whose ifi_ibytes wraps at 2**32 on this OS
+            # xnumeter reads NET_RT_IFLIST2, whose ifi_ibytes wraps at 2**32 on this OS
             # (verified: it equals netstat's value modulo 2**32, and the true 64-bit count
             # appears nowhere in the kernel record). Bring netstat into the same domain
-            # rather than pretending syspeek can see the unwrapped total.
+            # rather than pretending xnumeter can see the unwrapped total.
             return int(f[-rx_off]) % (1 << 32), int(f[-tx_off]) % (1 << 32)
     return None
 
@@ -106,7 +106,7 @@ if ok_net and net:
     elif after[0] < before[0] or after[1] < before[1]:
         print("  ok   %s counters wrapped or reset mid-check; bracket skipped" % busy["name"])
     else:
-        # netstat reads the net.link.generic.ifdata MIB, syspeek reads NET_RT_IFLIST2;
+        # netstat reads the net.link.generic.ifdata MIB, xnumeter reads NET_RT_IFLIST2;
         # the two kernel paths disagree by about a kilobyte on Wi-Fi. The bracket itself
         # covers live traffic, so the slack only has to cover that disagreement.
         for label, i in (("rx", 0), ("tx", 1)):
@@ -137,7 +137,7 @@ yes_pid=$!
 LOADED_PIDS="$yes_pid"
 sleep 1
 # No subshell: `( cmd ) &` is not guaranteed to exec, so $! could be the subshell and
-# killing it would leave syspeek sampling every process for its full run.
+# killing it would leave xnumeter sampling every process for its full run.
 $BIN --json -i 1200 -n 500 > "$CAL" 2>/dev/null &
 reader=$!
 sleep 4

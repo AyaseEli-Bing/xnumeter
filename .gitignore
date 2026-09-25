@@ -1,8 +1,9 @@
 # Root-anchored on purpose: macOS git defaults to core.ignorecase=true, so an
-# unanchored `syspeek` would also swallow Sources/SysPeek/ and `SysPeekApp` would
-# swallow Sources/SysPeekApp/ — the binaries and the source dirs differ only in case.
-/syspeek
-/SysPeekApp.app/
+# unanchored `xnumeter` would also swallow Sources/Xnumeter/, and `XnumeterApp`
+# would swallow Sources/XnumeterApp/ — the binaries and the source dirs differ
+# only in case.
+/xnumeter
+/XnumeterApp.app/
 
 .DS_Store
 .qoder/

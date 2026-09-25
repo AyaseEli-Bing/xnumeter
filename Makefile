@@ -1,13 +1,13 @@
-BIN     := syspeek
-APP     := SysPeekApp.app
-APP_BIN := $(APP)/Contents/MacOS/syspeek-gui
-PLIST   := Sources/SysPeekApp/Info.plist
+BIN     := xnumeter
+APP     := XnumeterApp.app
+APP_BIN := $(APP)/Contents/MacOS/xnumeter-gui
+PLIST   := Sources/XnumeterApp/Info.plist
 
-SRC     := $(wildcard Sources/SysPeek/*.swift)
+SRC     := $(wildcard Sources/Xnumeter/*.swift)
 # The app target shares the sampling layer with the CLI rather than duplicating it,
 # and deliberately leaves main.swift and Render.swift out of its build.
-APP_SRC := $(wildcard Sources/SysPeekApp/*.swift) \
-           Sources/SysPeek/Sampler.swift Sources/SysPeek/Snapshot.swift Sources/SysPeek/Format.swift
+APP_SRC := $(wildcard Sources/XnumeterApp/*.swift) \
+           Sources/Xnumeter/Sampler.swift Sources/Xnumeter/Snapshot.swift Sources/Xnumeter/Format.swift
 
 SWIFTC ?= swiftc
 # Swift 6 language mode, not just the 6.x toolchain: v5 mode would let a cross-isolation
@@ -25,7 +25,7 @@ $(APP_BIN): $(APP_SRC) $(PLIST)
 	@mkdir -p $(APP)/Contents/MacOS
 	$(SWIFTC) $(SWIFTFLAGS) $(APP_SRC) -o $@
 	cp $(PLIST) $(APP)/Contents/Info.plist
-	@codesign --force --sign - $(APP) 2>/dev/null || echo "syspeek: ad-hoc codesign skipped"
+	@codesign --force --sign - $(APP) 2>/dev/null || echo "xnumeter: ad-hoc codesign skipped"
 
 run: $(BIN)
 	./$(BIN)

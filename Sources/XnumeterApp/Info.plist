@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>syspeek</string>
+	<string>xnumeter</string>
 	<key>CFBundleDisplayName</key>
-	<string>syspeek</string>
+	<string>xnumeter</string>
 	<key>CFBundleIdentifier</key>
-	<string>local.syspeek.app</string>
+	<string>local.xnumeter.app</string>
 	<key>CFBundleExecutable</key>
-	<string>syspeek-gui</string>
+	<string>xnumeter-gui</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleInfoDictionaryVersion</key>

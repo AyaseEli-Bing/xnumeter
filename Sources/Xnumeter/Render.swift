@@ -57,7 +57,7 @@ final class Renderer {
 
     private func headerLine(_ snapshot: Snapshot, _ width: Int) -> String {
         let right = clockString(snapshot.timestampMs)
-        let left = "syspeek  \(snapshot.hostName)  up \(Format.duration(snapshot.uptimeSeconds))"
+        let left = "xnumeter  \(snapshot.hostName)  up \(Format.duration(snapshot.uptimeSeconds))"
         let allowed = Swift.max(8, width - right.count - 1)
         let head = left.count > allowed ? String(left.prefix(allowed - 1)) + "~" : left
         return bold(head + String(repeating: " ", count: Swift.max(1, width - head.count - right.count)) + right)
