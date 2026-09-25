@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcode-select -p
+          xcodebuild -version
+          swiftc --version
+
+      - name: Build CLI and app
+        run: make all
+
+      - name: Cross-check against netstat, vm_stat, sysctl and top
+        run: ./scripts/selftest.sh
