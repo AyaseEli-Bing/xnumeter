@@ -7,3 +7,6 @@
 
 .DS_Store
 .qoder/
+
+# Release staging (make dist output)
+/dist/
