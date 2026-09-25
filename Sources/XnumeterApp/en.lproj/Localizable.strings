@@ -1,0 +1,29 @@
+/* Explicit English values so the development language does not rely on
+   key-fallback, which silently hides a missing translation in the other table. */
+"CPU" = "CPU";
+"up %@" = "up %@";
+"MEM" = "MEM";
+"SWAP" = "SWAP";
+"DISK" = "DISK";
+"NET" = "NET";
+"PROC" = "PROC";
+
+"sampling…" = "sampling…";
+"green = rx, orange = tx" = "green = rx, orange = tx";
+"peak %@" = "peak %@";
+"no interface" = "no interface";
+"no interface has carried traffic" = "no interface has carried traffic";
+
+"INTERFACE" = "INTERFACE";
+"RX" = "RX";
+"TX" = "TX";
+"RX TOTAL" = "RX TOTAL";
+"TX TOTAL" = "TX TOTAL";
+"PID" = "PID";
+"NAME" = "NAME";
+"CPU%" = "CPU%";
+"RSS" = "RSS";
+
+"About xnumeter" = "About xnumeter";
+"Quit xnumeter" = "Quit xnumeter";
+"Show / Hide Dashboard" = "Show / Hide Dashboard";

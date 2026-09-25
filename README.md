@@ -94,6 +94,18 @@ dashboard draws CPU / memory / swap / disk gauges, a 120-sample rolling network
 graph, and the top interfaces and processes, refreshing once per second. It
 shares `Sampler.swift` with the CLI rather than reimplementing the sampling.
 
+The dashboard follows the system language and ships English and Simplified
+Chinese tables (`Sources/XnumeterApp/*.lproj`). The terminal UI stays ASCII on
+purpose: its columns are aligned by character count, and CJK glyphs are
+double-width.
+
+To preview another language without changing your system settings:
+
+```sh
+defaults write local.xnumeter.app AppleLanguages -array en      # back to English
+defaults delete local.xnumeter.app AppleLanguages               # follow the system
+```
+
 ## What it reads
 
 | Metric | Source |

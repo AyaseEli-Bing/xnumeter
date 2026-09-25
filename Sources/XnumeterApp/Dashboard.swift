@@ -1,5 +1,12 @@
 import SwiftUI
 
+/// Every user-facing string in the dashboard goes through this. The keys are the
+/// English texts, with tables under `en.lproj` and `zh-Hans.lproj`; the system
+/// language picks the table, so a Chinese macOS gets Chinese labels.
+private func localized(_ key: String) -> String {
+    NSLocalizedString(key, comment: "")
+}
+
 /// Tracks one interface's history. The busiest interface by cumulative traffic is used,
 /// which matches the first NET row of the CLI and is stable across a session.
 final class NetHistory {
@@ -75,7 +82,7 @@ private struct GaugeRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 8) {
-                Text(label)
+                Text(localized(label))
                     .font(.system(size: 11, weight: .bold))
                     .frame(width: 42, alignment: .leading)
                 GeometryReader { geo in
@@ -150,7 +157,7 @@ struct DashboardView: View {
             if let snapshot = model.snapshot {
                 content(snapshot)
             } else {
-                Text("sampling…")
+                Text(localized("sampling…"))
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .frame(width: 560, height: 40)
@@ -165,10 +172,10 @@ struct DashboardView: View {
             ? Double(snapshot.mem.swapUsedBytes) / Double(snapshot.mem.swapTotalBytes) * 100
             : 0
         let disk = snapshot.disks.max { $0.percent < $1.percent }
-        let tracked = model.history.name == "-" ? "no interface" : model.history.name
+        let tracked = model.history.name == "-" ? localized("no interface") : model.history.name
 
         return VStack(alignment: .leading, spacing: 0) {
-            Text("\(snapshot.hostName)  up \(Format.duration(snapshot.uptimeSeconds))")
+            Text("\(snapshot.hostName)  \(String(format: localized("up %@"), Format.duration(snapshot.uptimeSeconds)))")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
@@ -200,8 +207,8 @@ struct DashboardView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text("NET").font(.system(size: 11, weight: .bold))
-                    Text("\(tracked)   green = rx, orange = tx   peak \(Format.rate(model.history.peak))")
+                    Text(localized("NET")).font(.system(size: 11, weight: .bold))
+                    Text("\(tracked)   \(localized("green = rx, orange = tx"))   \(String(format: localized("peak %@"), Format.rate(model.history.peak)))")
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
@@ -210,7 +217,7 @@ struct DashboardView: View {
             .padding(.top, 16)
 
             Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 2) {
-                MetricRow(cells: [("INTERFACE", 70, false), ("RX", 60, true), ("TX", 60, true), ("RX TOTAL", 70, true), ("TX TOTAL", 70, true)])
+                MetricRow(cells: [(localized("INTERFACE"), 70, false), (localized("RX"), 60, true), (localized("TX"), 60, true), (localized("RX TOTAL"), 70, true), (localized("TX TOTAL"), 70, true)])
                     .foregroundStyle(.secondary)
                 ForEach(snapshot.net.prefix(4)) { net in
                     MetricRow(cells: [
@@ -222,7 +229,7 @@ struct DashboardView: View {
                     ])
                 }
                 if snapshot.net.isEmpty {
-                    Text("no interface has carried traffic")
+                    Text(localized("no interface has carried traffic"))
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
@@ -230,8 +237,8 @@ struct DashboardView: View {
             .padding(.top, 12)
 
             Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 2) {
-                Text("PROC").font(.system(size: 11, weight: .bold))
-                MetricRow(cells: [("PID", 48, true), ("NAME", 200, false), ("CPU%", 52, true), ("RSS", 64, true)])
+                Text(localized("PROC")).font(.system(size: 11, weight: .bold))
+                MetricRow(cells: [(localized("PID"), 48, true), (localized("NAME"), 200, false), (localized("CPU%"), 52, true), (localized("RSS"), 64, true)])
                     .foregroundStyle(.secondary)
                 ForEach(snapshot.processes.prefix(6)) { proc in
                     MetricRow(cells: [

@@ -2,6 +2,7 @@ BIN     := xnumeter
 APP     := XnumeterApp.app
 APP_BIN := $(APP)/Contents/MacOS/xnumeter-gui
 PLIST   := Sources/XnumeterApp/Info.plist
+LPROJ   := $(wildcard Sources/XnumeterApp/*.lproj)
 
 SRC     := $(wildcard Sources/Xnumeter/*.swift)
 # The app target shares the sampling layer with the CLI rather than duplicating it,
@@ -21,10 +22,11 @@ $(BIN): $(SRC)
 
 app: $(APP_BIN)
 
-$(APP_BIN): $(APP_SRC) $(PLIST)
-	@mkdir -p $(APP)/Contents/MacOS
+$(APP_BIN): $(APP_SRC) $(PLIST) $(LPROJ)
+	@mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	$(SWIFTC) $(SWIFTFLAGS) $(APP_SRC) -o $@
 	cp $(PLIST) $(APP)/Contents/Info.plist
+	cp -R $(LPROJ) $(APP)/Contents/Resources/
 	@codesign --force --sign - $(APP) 2>/dev/null || echo "xnumeter: ad-hoc codesign skipped"
 
 run: $(BIN)

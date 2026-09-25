@@ -1,0 +1,32 @@
+/* Gauge labels. CPU stays CPU, matching Activity Monitor's Chinese UI. */
+"CPU" = "CPU";"MEM" = "内存";
+"SWAP" = "交换";
+"DISK" = "磁盘";
+"NET" = "网络";
+"PROC" = "进程";
+
+/* Host line */
+"up %@" = "运行 %@";
+
+/* Network panel */
+"sampling…" = "采样中…";
+"green = rx, orange = tx" = "绿 = 接收，橙 = 发送";
+"peak %@" = "峰值 %@";
+"no interface" = "无接口";
+"no interface has carried traffic" = "没有接口承载过流量";
+
+/* Table headers */
+"INTERFACE" = "接口";
+"RX" = "接收";
+"TX" = "发送";
+"RX TOTAL" = "接收累计";
+"TX TOTAL" = "发送累计";
+"PID" = "PID";
+"NAME" = "名称";
+"CPU%" = "CPU%";
+"RSS" = "RSS";
+
+/* Menus */
+"About xnumeter" = "关于 xnumeter";
+"Quit xnumeter" = "退出 xnumeter";
+"Show / Hide Dashboard" = "显示 / 隐藏面板";
