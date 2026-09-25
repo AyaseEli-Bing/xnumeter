@@ -9,6 +9,9 @@ The point of building it on raw kernel calls instead of wrapping `top` or
 they can be checked against them. `scripts/selftest.sh` does exactly that and
 fails the build when xnumeter and the OS disagree.
 
+![The menu-bar dashboard: CPU, memory, swap and disk gauges, a rolling network
+graph over the busiest interface, and the top interfaces and processes](docs/screenshot.png)
+
 ## Requirements
 
 - macOS (Apple Silicon or Intel)
