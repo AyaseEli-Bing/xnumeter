@@ -145,6 +145,17 @@ deltas, asserts the interface set has no loopback and no duplicates, and checks
 that the text snapshot contains each gauge and table header. Ends with
 `ALL CHECKS PASSED`.
 
+## Contributing
+
+**Open or claim an issue before sending a PR** — it prevents two people doing the same task and
+lets the maintainer flag a wrong approach early.
+
+- Setup, build/test commands and conventions: [CONTRIBUTING.md](CONTRIBUTING.md).
+- Looking for a starting point? Browse
+  [`good first issue`](https://github.com/AyaseEli-Bing/xnumeter/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) —
+  each one names the file, the fix, and the command that proves it works.
+- `make all` and `make test` (ends with `ALL CHECKS PASSED`) are the bar for any PR.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
