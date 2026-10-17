@@ -4,6 +4,7 @@ import Darwin
 /// Counters that XNU reports as cumulative are diffed across two `sample()`
 /// calls, so the first call only seeds state and reports zero for every rate.
 final class Sampler {
+    nonisolated(unsafe) private static var didReportInvisibleProcesses = false
     private struct CpuTicks {
         var user: UInt32
         var system: UInt32
@@ -279,10 +280,12 @@ final class Sampler {
 
         var results: [ProcSample] = []
         var next: [Int32: ProcState] = [:]
+        var skippedInvisible = 0
 
         for index in 0..<limit {
             let pid = pids[index]
-            guard pid > 0, let r = rusage(pid) else { continue }
+            guard pid > 0 else { continue }
+            guard let r = rusage(pid) else { skippedInvisible += 1; continue }
             next[pid] = ProcState(
                 startAbstime: r.startAbstime,
                 cpuNs: r.cpuNs,
@@ -310,6 +313,11 @@ final class Sampler {
                 diskReadBytesPerSec: readRate,
                 diskWriteBytesPerSec: writeRate
             ))
+        }
+        if skippedInvisible > 0 && !Sampler.didReportInvisibleProcesses {
+            let note = "note: \(skippedInvisible) processes not visible to this user (run with sudo for the full list)\n"
+            FileHandle.standardError.write(Data(note.utf8))
+            Sampler.didReportInvisibleProcesses = true
         }
         prevProcs = next
 
