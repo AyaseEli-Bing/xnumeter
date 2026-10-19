@@ -4,7 +4,6 @@ import Darwin
 /// Counters that XNU reports as cumulative are diffed across two `sample()`
 /// calls, so the first call only seeds state and reports zero for every rate.
 final class Sampler {
-    nonisolated(unsafe) private static var didReportInvisibleProcesses = false
     private struct CpuTicks {
         var user: UInt32
         var system: UInt32
@@ -27,6 +26,7 @@ final class Sampler {
     private var prevTicks: CpuTicks?
     private var prevWallNs: UInt64?
     private var prevProcs: [Int32: ProcState] = [:]
+    private var didReportInvisibleProcesses = false
     private var prevNet: [String: NetCounters] = [:]
 
     // proc_pid_rusage reports cpu time in mach absolute time units, not nanoseconds
@@ -285,7 +285,13 @@ final class Sampler {
         for index in 0..<limit {
             let pid = pids[index]
             guard pid > 0 else { continue }
-            guard let r = rusage(pid) else { skippedInvisible += 1; continue }
+            guard let r = rusage(pid) else {
+                // proc_pid_rusage returns -1 and sets errno. ESRCH means the process
+                // exited between the pid list and this call -- sudo would not have
+                // shown it either -- so only a permission denial is counted here.
+                if errno == EPERM { skippedInvisible += 1 }
+                continue
+            }
             next[pid] = ProcState(
                 startAbstime: r.startAbstime,
                 cpuNs: r.cpuNs,
@@ -314,10 +320,12 @@ final class Sampler {
                 diskWriteBytesPerSec: writeRate
             ))
         }
-        if skippedInvisible > 0 && !Sampler.didReportInvisibleProcesses {
+        // The first sample only seeds the cumulative counters (spanSec == 0), so a note
+        // written there would describe a table the user never sees.
+        if spanSec > 0 && skippedInvisible > 0 && !didReportInvisibleProcesses {
             let note = "note: \(skippedInvisible) processes not visible to this user (run with sudo for the full list)\n"
             FileHandle.standardError.write(Data(note.utf8))
-            Sampler.didReportInvisibleProcesses = true
+            didReportInvisibleProcesses = true
         }
         prevProcs = next
 
