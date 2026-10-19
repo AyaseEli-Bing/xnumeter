@@ -131,6 +131,12 @@ defaults delete local.xnumeter.app AppleLanguages               # follow the sys
   has no rate to show; that is reported as `-`, not as a measurement.
 - **Per-process CPU is a rate over the sampling window**, not a lifetime
   average, so a process that finished between two samples can briefly read 0.
+- **Non-root users see only their own processes.** A plain user session cannot
+  inspect processes owned by other users or root, so those pids are skipped;
+  xnumeter prints one line to stderr with that count, once per run. Processes
+  that exited between the pid list and the rusage call are not counted, because
+  `sudo` would not have shown them either. Run under `sudo`
+  to see the full table (and note that the selftest is not run as root).
 
 ## Tests
 

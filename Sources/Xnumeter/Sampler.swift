@@ -26,6 +26,7 @@ final class Sampler {
     private var prevTicks: CpuTicks?
     private var prevWallNs: UInt64?
     private var prevProcs: [Int32: ProcState] = [:]
+    private var didReportInvisibleProcesses = false
     private var prevNet: [String: NetCounters] = [:]
 
     // proc_pid_rusage reports cpu time in mach absolute time units, not nanoseconds
@@ -279,10 +280,18 @@ final class Sampler {
 
         var results: [ProcSample] = []
         var next: [Int32: ProcState] = [:]
+        var skippedInvisible = 0
 
         for index in 0..<limit {
             let pid = pids[index]
-            guard pid > 0, let r = rusage(pid) else { continue }
+            guard pid > 0 else { continue }
+            guard let r = rusage(pid) else {
+                // proc_pid_rusage returns -1 and sets errno. ESRCH means the process
+                // exited between the pid list and this call -- sudo would not have
+                // shown it either -- so only a permission denial is counted here.
+                if errno == EPERM { skippedInvisible += 1 }
+                continue
+            }
             next[pid] = ProcState(
                 startAbstime: r.startAbstime,
                 cpuNs: r.cpuNs,
@@ -310,6 +319,13 @@ final class Sampler {
                 diskReadBytesPerSec: readRate,
                 diskWriteBytesPerSec: writeRate
             ))
+        }
+        // The first sample only seeds the cumulative counters (spanSec == 0), so a note
+        // written there would describe a table the user never sees.
+        if spanSec > 0 && skippedInvisible > 0 && !didReportInvisibleProcesses {
+            let note = "note: \(skippedInvisible) processes not visible to this user (run with sudo for the full list)\n"
+            FileHandle.standardError.write(Data(note.utf8))
+            didReportInvisibleProcesses = true
         }
         prevProcs = next
 
