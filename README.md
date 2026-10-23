@@ -56,11 +56,13 @@ NET  en0      rx 11.4K/s   tx 3.8K/s    total rx 741.8M tx 2.2G
 | `-s`, `--sort <key>` | `cpu` or `mem` (default `cpu`) |
 | `--once` | one snapshot then exit; switches output to text unless `--json` is given |
 | `--json` | NDJSON instead of a rendered view |
+| `--dashboard` | start TUI in dashboard view (CPU/MEM/NET sparklines); toggle with `g` |
 | `--no-io` | drop the per-process disk read/write columns |
 | `--no-color` | disable ANSI colour (also implied when stdout is not a TTY) |
 
-Keys in the TUI: `q` quit, `s` toggle sort, `↑`/`↓` or `j`/`k` scroll the
-process list.
+Keys in the TUI: `q` quit, `s` toggle sort, `g` toggle dashboard, `↑`/`↓` or `j`/`k` scroll the process list.
+
+The dashboard view draws sparklines for CPU, memory and the busiest network interface using Unicode block characters; the `g` key switches between the dashboard and the process list.
 
 Piping or redirecting stdout falls back to plain text automatically, so
 `./xnumeter > snap.txt` never writes escape codes into the file.

@@ -15,6 +15,7 @@ struct Config {
     var sort: SortKey = .cpu
     var showIo = true
     var color = isatty(STDOUT_FILENO) != 0
+    var dashboard = false
 }
 
 let usageText = """
@@ -28,6 +29,7 @@ MODES
   --once        one text snapshot, for logs and pipes
   --json        NDJSON, one object per interval
   --once --json a single JSON object
+  --dashboard   start TUI in dashboard view (toggle with 'g')
 
 OPTIONS
   -i, --interval <ms>   refresh interval            (default 1000, min 100)
@@ -61,6 +63,7 @@ func parseConfig(_ args: [String]) -> Config {
         switch arg {
         case "--once": c.once = true
         case "--json": c.output = .json
+        case "--dashboard": c.dashboard = true
         case "--no-io": c.showIo = false
         case "--no-color": c.color = false
         case "-i", "--interval":
@@ -99,7 +102,7 @@ final class Terminal {
     nonisolated(unsafe) static var current: Terminal?
 
     enum Key {
-        case quit, sort, up, down
+        case quit, sort, up, down, dashboard
     }
 
     // Non-blocking input is a poll() check before each read(): termios.c_cc has no
@@ -167,6 +170,7 @@ final class Terminal {
         switch byte {
         case UInt8(ascii: "q"), 0x03: return .quit
         case UInt8(ascii: "s"): return .sort
+        case UInt8(ascii: "g"): return .dashboard
         case UInt8(ascii: "k"): return .up
         case UInt8(ascii: "j"): return .down
         default: return nil
@@ -179,6 +183,11 @@ func nap(ms: Int) {
     select(0, nil, nil, nil, &tv)
 }
 
+enum ViewMode {
+    case list
+    case dashboard
+}
+
 func runTui(_ config: Config, _ sampler: Sampler) {
     let terminal = Terminal()
     terminal.enterRawMode()
@@ -187,7 +196,10 @@ func runTui(_ config: Config, _ sampler: Sampler) {
     let renderer = Renderer(color: config.color)
     var sort = config.sort
     var scroll = 0
+    var mode: ViewMode = config.dashboard ? .dashboard : .list
     var snapshot = sampler.sample(sort: sort, top: config.top)
+    var history = SampleHistory(capacity: 300)
+    history.append(snapshot)
 
     loop: while true {
         let size = terminal.size
@@ -199,8 +211,16 @@ func runTui(_ config: Config, _ sampler: Sampler) {
             color: config.color,
             showIo: config.showIo
         )
-        let body = renderer.lines(snapshot, options)
-        let footer = renderer.footer(sort: sort, rows: body.count, width: size.width)
+        let body: [String]
+        let footer: String
+        switch mode {
+        case .list:
+            body = renderer.lines(snapshot, options)
+            footer = renderer.footer(sort: sort, rows: body.count, width: size.width)
+        case .dashboard:
+            body = renderer.dashboardLines(snapshot, history, options)
+            footer = ""
+        }
         terminal.write("\u{1b}[H\u{1b}[2J" + body.joined(separator: "\r\n") + "\r\n" + footer)
 
         var waited = 0
@@ -220,10 +240,14 @@ func runTui(_ config: Config, _ sampler: Sampler) {
                 scroll = Swift.max(0, scroll - 1)
             case .down:
                 scroll += 1
+            case .dashboard:
+                mode = (mode == .list) ? .dashboard : .list
             }
             snapshot = sampler.sample(sort: sort, top: config.top)
+            history.append(snapshot)
         }
         snapshot = sampler.sample(sort: sort, top: config.top)
+        history.append(snapshot)
     }
     terminal.write("\r\n")
 }
@@ -252,7 +276,14 @@ func execute(_ config: Config) {
             color: config.color,
             showIo: config.showIo
         )
-        print(Renderer(color: config.color).lines(snapshot, options).joined(separator: "\n"))
+        let renderer = Renderer(color: config.color)
+        if config.dashboard {
+            var history = SampleHistory(capacity: 1)
+            history.append(snapshot)
+            print(renderer.dashboardLines(snapshot, history, options).joined(separator: "\n"))
+        } else {
+            print(renderer.lines(snapshot, options).joined(separator: "\n"))
+        }
     case .json:
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]

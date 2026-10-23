@@ -203,7 +203,14 @@ sys.exit(0 if (good and in_range and not drifted and checked >= 0) else 1)
 PY
 [ $? -eq 0 ] || fail=1
 
-echo "4) text mode"
+echo "4) dashboard mode"
+DASH=$($BIN --dashboard --once --no-color) || bad "dashboard mode exited non-zero"
+for row in '^CPU ' '^MEM ' '^NET '; do
+  printf '%s' "$DASH" | grep -q "$row" && ok "dashboard contains $row" || bad "dashboard missing $row"
+done
+printf '%s' "$DASH" | grep -q "g list" && ok "dashboard footer shows g list" || bad "dashboard footer missing g list"
+
+echo "5) text mode"
 OUT=$($BIN --once --no-color) || bad "text mode exited non-zero"
 # Anchored: an unanchored CPU also matches the CPU% column header and DISK matches
 # DISK-R/DISK-W, so the gauge rows could vanish and these checks would still pass.
