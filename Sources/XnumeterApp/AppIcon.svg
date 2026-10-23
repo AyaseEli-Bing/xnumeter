@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>xnumeter</title>
+  <desc>A dark rounded-square app icon with a three-colour gauge arc, a white needle and an x-shaped hub.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#182333"/>
+      <stop offset="0.55" stop-color="#0F1723"/>
+      <stop offset="1" stop-color="#080D14"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.36" r="0.62">
+      <stop offset="0" stop-color="#31465E" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#31465E" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <clipPath id="squircle">
+      <rect x="100" y="100" width="824" height="824" rx="185"/>
+    </clipPath>
+  </defs>
+
+  <!-- soft drop shadow -->
+  <rect x="100" y="118" width="824" height="824" rx="185" fill="#000000" opacity="0.38" filter="url(#shadow)"/>
+
+  <!-- rounded-square background -->
+  <g clip-path="url(#squircle)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#bg)"/>
+    <rect x="100" y="100" width="824" height="824" fill="url(#glow)"/>
+    <rect x="100" y="100" width="824" height="24" fill="#FFFFFF" opacity="0.035"/>
+  </g>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2"/>
+
+  <!-- outer tick ring: 12 dashes -->
+  <circle cx="512" cy="512" r="382" fill="none" stroke="#FFFFFF" stroke-opacity="0.16"
+          stroke-width="8" stroke-linecap="round" stroke-dasharray="8 192.015"
+          transform="rotate(15 512 512)"/>
+
+  <!-- colour glow beneath the gauge -->
+  <g filter="url(#soft)" opacity="0.5">
+    <path d="M 299.87 724.13 A 300 300 0 0 1 299.87 299.87" fill="none" stroke="#2EE59D" stroke-width="46" stroke-linecap="round"/>
+    <path d="M 299.87 299.87 A 300 300 0 0 1 724.13 299.87" fill="none" stroke="#FFC53D" stroke-width="46" stroke-linecap="round"/>
+    <path d="M 724.13 299.87 A 300 300 0 0 1 724.13 724.13" fill="none" stroke="#FF5C5C" stroke-width="46" stroke-linecap="round"/>
+  </g>
+
+  <!-- gauge -->
+  <path d="M 299.87 724.13 A 300 300 0 0 1 299.87 299.87" fill="none" stroke="#2EE59D" stroke-width="46" stroke-linecap="round"/>
+  <path d="M 299.87 299.87 A 300 300 0 0 1 724.13 299.87" fill="none" stroke="#FFC53D" stroke-width="46" stroke-linecap="round"/>
+  <path d="M 724.13 299.87 A 300 300 0 0 1 724.13 724.13" fill="none" stroke="#FF5C5C" stroke-width="46" stroke-linecap="round"/>
+
+  <!-- needle with a soft shadow -->
+  <line x1="512" y1="512" x2="597.5" y2="277.1" stroke="#000000" stroke-opacity="0.35"
+        stroke-width="30" stroke-linecap="round" transform="translate(0 8)"/>
+  <line x1="512" y1="512" x2="597.5" y2="277.1" stroke="#F2F6FB" stroke-width="24" stroke-linecap="round"/>
+
+  <!-- white hub with a dark x -->
+  <circle cx="512" cy="512" r="48" fill="#F2F6FB"/>
+  <g stroke="#0A1018" stroke-width="12" stroke-linecap="round">
+    <line x1="496" y1="496" x2="528" y2="528"/>
+    <line x1="496" y1="528" x2="528" y2="496"/>
+  </g>
+</svg>

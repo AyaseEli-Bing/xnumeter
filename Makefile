@@ -2,6 +2,7 @@ BIN     := xnumeter
 APP     := XnumeterApp.app
 APP_BIN := $(APP)/Contents/MacOS/xnumeter-gui
 PLIST   := Sources/XnumeterApp/Info.plist
+ICON    := Sources/XnumeterApp/AppIcon.icns
 LPROJ   := $(wildcard Sources/XnumeterApp/*.lproj)
 
 SRC     := $(wildcard Sources/Xnumeter/*.swift)
@@ -22,11 +23,12 @@ $(BIN): $(SRC)
 
 app: $(APP_BIN)
 
-$(APP_BIN): $(APP_SRC) $(PLIST) $(LPROJ)
+$(APP_BIN): $(APP_SRC) $(PLIST) $(LPROJ) $(ICON)
 	@mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	$(SWIFTC) $(SWIFTFLAGS) $(APP_SRC) -o $@
 	cp $(PLIST) $(APP)/Contents/Info.plist
 	cp -R $(LPROJ) $(APP)/Contents/Resources/
+	cp $(ICON) $(APP)/Contents/Resources/
 	@codesign --force --sign - $(APP) 2>/dev/null || echo "xnumeter: ad-hoc codesign skipped"
 
 run: $(BIN)
