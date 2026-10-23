@@ -93,7 +93,7 @@ final class Renderer {
     }
 
     func footer(sort: SortKey, rows: Int, width: Int) -> String {
-        var parts = ["sort: \(sort.rawValue)", "q quit", "s sort", "up/down scroll", "\(rows) rows"]
+        var parts = ["sort: \(sort.rawValue)", "q quit", "s sort", "g dashboard", "up/down scroll", "\(rows) rows"]
         while parts.count > 1, parts.joined(separator: "   ").count > width {
             parts.removeLast()
         }
@@ -178,11 +178,72 @@ final class Renderer {
     private func trim(_ v: Double) -> String { String(format: "%.0f", v) }
     private func fmt(_ v: Double) -> String { String(format: "%.2f", v) }
 
+    func dashboardLines(_ snapshot: Snapshot, _ history: SampleHistory, _ options: ViewOptions) -> [String] {
+        let width = Swift.max(60, options.width)
+        var out: [String] = [headerLine(snapshot, width), dim(String(repeating: "-", count: width))]
+        let plotWidth = Swift.max(10, width - 18)
+
+        out.append(dashboardRow(
+            label: "CPU",
+            suffix: Format.percent(snapshot.cpu.totalPercent),
+            sparkline: sparkline(history.cpu, max: 100.0, width: plotWidth),
+            width: width
+        ))
+        out.append(dashboardRow(
+            label: "MEM",
+            suffix: Format.percent(snapshot.mem.percent),
+            sparkline: sparkline(history.mem, max: 100.0, width: plotWidth),
+            width: width
+        ))
+
+        let netValues = history.net
+        let netPeak = Swift.max(1024.0, netValues.max() ?? 0)
+        let topNet = snapshot.net.first
+        let netRate = topNet.map { $0.rxBytesPerSec + $0.txBytesPerSec } ?? 0
+        let netName = topNet?.name ?? "-"
+        out.append(dashboardRow(
+            label: "NET",
+            suffix: "\(netName) \(Format.rate(netRate))",
+            sparkline: sparkline(history.net, max: netPeak, width: plotWidth),
+            width: width
+        ))
+
+        out.append(dim(String(repeating: "-", count: width)))
+        out.append(dim("g list   q quit"))
+        return out
+    }
+
+    // MARK: - Dashboard helpers
+
+    private func dashboardRow(label: String, suffix: String, sparkline spark: String, width: Int) -> String {
+        let left = label + " "
+        let right = " " + suffix
+        let budget = Swift.max(1, width - left.count - right.count)
+        let plot: String
+        if spark.count >= budget {
+            plot = String(spark.suffix(budget))
+        } else {
+            plot = spark + String(repeating: " ", count: budget - spark.count)
+        }
+        return left + plot + right
+    }
+
     private func clockString(_ ms: Int64) -> String {
         TimeFormatter.shared.string(from: Date(timeIntervalSince1970: Double(ms) / 1000))
     }
 }
 
+private func sparkline(_ values: [Double], max: Double, width: Int) -> String {
+    let blocks = "▁▂▃▄▅▆▇█"
+    let source = values.suffix(width)
+    return source.map { value in
+        if max <= 0 { return String(blocks[blocks.startIndex]) }
+        let ratio = Swift.max(0, Swift.min(1, value / max))
+        let level = Int((ratio * 7).rounded())
+        let index = blocks.index(blocks.startIndex, offsetBy: Swift.max(0, Swift.min(7, level)))
+        return String(blocks[index])
+    }.joined()
+}
 private enum TimeFormatter {
     static let shared: DateFormatter = {
         let f = DateFormatter()
