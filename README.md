@@ -1,5 +1,7 @@
 # xnumeter
 
+<img src="Sources/XnumeterApp/AppIcon.svg" width="88" align="right" alt="xnumeter app icon">
+
 A zero-dependency macOS system monitor. One Swift binary, no packages, no
 script runtime, no Electron — it reads XNU kernel statistics directly and
 renders them as a terminal UI, a text snapshot, or NDJSON.

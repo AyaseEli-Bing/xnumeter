@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>xnumeter (small sizes)</title>
+  <desc>Simplified app icon used for 16, 32 and 64 pixel slots.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#182333"/>
+      <stop offset="0.55" stop-color="#0F1723"/>
+      <stop offset="1" stop-color="#080D14"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <clipPath id="squircle">
+      <rect x="100" y="100" width="824" height="824" rx="185"/>
+    </clipPath>
+  </defs>
+
+  <rect x="100" y="118" width="824" height="824" rx="185" fill="#000000" opacity="0.38" filter="url(#shadow)"/>
+
+  <g clip-path="url(#squircle)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#bg)"/>
+  </g>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2"/>
+
+  <path d="M 299.87 724.13 A 300 300 0 0 1 299.87 299.87" fill="none" stroke="#2EE59D" stroke-width="80" stroke-linecap="round"/>
+  <path d="M 299.87 299.87 A 300 300 0 0 1 724.13 299.87" fill="none" stroke="#FFC53D" stroke-width="80" stroke-linecap="round"/>
+  <path d="M 724.13 299.87 A 300 300 0 0 1 724.13 724.13" fill="none" stroke="#FF5C5C" stroke-width="80" stroke-linecap="round"/>
+
+  <line x1="512" y1="512" x2="597.5" y2="277.1" stroke="#F2F6FB" stroke-width="56" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="58" fill="#F2F6FB"/>
+</svg>

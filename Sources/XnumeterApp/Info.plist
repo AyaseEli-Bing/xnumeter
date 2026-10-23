@@ -10,6 +10,8 @@
 	<string>local.xnumeter.app</string>
 	<key>CFBundleExecutable</key>
 	<string>xnumeter-gui</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleInfoDictionaryVersion</key>
