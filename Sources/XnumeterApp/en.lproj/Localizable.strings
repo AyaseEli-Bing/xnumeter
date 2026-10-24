@@ -7,6 +7,10 @@
 "DISK" = "DISK";
 "NET" = "NET";
 "PROC" = "PROC";
+"TEMP" = "TEMP";
+"GPU" = "GPU";
+"FAN" = "FAN";
+"SENSORS" = "SENSORS";
 
 "sampling…" = "sampling…";
 "green = rx, orange = tx" = "green = rx, orange = tx";

@@ -9,7 +9,9 @@ SRC     := $(wildcard Sources/Xnumeter/*.swift)
 # The app target shares the sampling layer with the CLI rather than duplicating it,
 # and deliberately leaves main.swift and Render.swift out of its build.
 APP_SRC := $(wildcard Sources/XnumeterApp/*.swift) \
-           Sources/Xnumeter/Sampler.swift Sources/Xnumeter/Snapshot.swift Sources/Xnumeter/Format.swift
+           Sources/Xnumeter/Sampler.swift Sources/Xnumeter/Snapshot.swift Sources/Xnumeter/Format.swift \
+           Sources/Xnumeter/TemperatureReader.swift Sources/Xnumeter/GPUReader.swift \
+           Sources/Xnumeter/EnergyReader.swift Sources/Xnumeter/FanReader.swift Sources/Xnumeter/SensorSampler.swift
 
 SWIFTC ?= swiftc
 # Swift 6 language mode, not just the 6.x toolchain: v5 mode would let a cross-isolation

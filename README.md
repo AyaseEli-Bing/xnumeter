@@ -3,8 +3,13 @@
 <img src="Sources/XnumeterApp/AppIcon.svg" width="88" align="right" alt="xnumeter app icon">
 
 A zero-dependency macOS system monitor. One Swift binary, no packages, no
-script runtime, no Electron — it reads XNU kernel statistics directly and
-renders them as a terminal UI, a text snapshot, or NDJSON.
+script runtime, no Electron — it reads XNU kernel statistics and Apple Silicon
+sensor data directly, and renders them as a terminal UI, a text snapshot, or
+NDJSON.
+
+The sensor layer (SoC temperature, GPU utilization and power, fan speed) is
+merged from [heatpeek](https://github.com/AyaseEli-Bing/heatpeek); the CPU,
+memory, disk, network and process data is xnumeter's own kernel sampling.
 
 The point of building it on raw kernel calls instead of wrapping `top` or
 `vm_stat` is that the numbers come from the same source those tools read, so
@@ -17,6 +22,8 @@ graph over the busiest interface, and the top interfaces and processes](docs/scr
 ## Requirements
 
 - macOS (Apple Silicon or Intel)
+- Sensor readings (temperature, GPU power, fan speed) are Apple Silicon
+  features; on unsupported hardware they report `unavailable` instead of failing.
 - Xcode or Command Line Tools providing Swift 6 — `swiftc` is the only build step
 
 No `Package.swift`, no dependency resolution, no network access during build.
@@ -45,6 +52,9 @@ MEM   66.8% [#########.....]  10.7G/16.0G  wired 2.0G  comp 4.0G  purge 103.6M
 SWAP   0.0% [..............]  0/0
 DISK  87.0% [############..]  /  400.7G/460.4G  free 59.7G
 NET  en0      rx 11.4K/s   tx 3.8K/s    total rx 741.8M tx 2.2G
+TEMP  max 51.8°C (PMU tcal)  avg 41.2°C  44 sensors
+GPU   util 18%  power 0.07W
+FAN   Fan 1 2503 RPM
 
    PID NAME                      CPU%     RSS    FOOT
  61798 ReportCrashService        74.1  234.0M    7.0M
@@ -58,13 +68,16 @@ NET  en0      rx 11.4K/s   tx 3.8K/s    total rx 741.8M tx 2.2G
 | `-s`, `--sort <key>` | `cpu` or `mem` (default `cpu`) |
 | `--once` | one snapshot then exit; switches output to text unless `--json` is given |
 | `--json` | NDJSON instead of a rendered view |
-| `--dashboard` | start TUI in dashboard view (CPU/MEM/NET sparklines); toggle with `g` |
+| `--dashboard` | start TUI in dashboard view (CPU/MEM/TEMP/GPU/NET sparklines); toggle with `g` |
 | `--no-io` | drop the per-process disk read/write columns |
 | `--no-color` | disable ANSI colour (also implied when stdout is not a TTY) |
 
 Keys in the TUI: `q` quit, `s` toggle sort, `g` toggle dashboard, `↑`/`↓` or `j`/`k` scroll the process list.
 
-The dashboard view draws sparklines for CPU, memory and the busiest network interface using Unicode block characters; the `g` key switches between the dashboard and the process list.
+The dashboard view draws sparklines for CPU, memory, temperature, GPU
+utilization and the busiest network interface using Unicode block characters;
+the `g` key switches between the dashboard and the process list. The TUI marks
+temperatures at or above 85 °C with `▲` and a red row.
 
 Piping or redirecting stdout falls back to plain text automatically, so
 `./xnumeter > snap.txt` never writes escape codes into the file.
@@ -78,12 +91,30 @@ Each line is one snapshot:
  "net":[{"name":"en0","rxBytes":…,"rxBytesPerSec":…,"txBytes":…,"txBytesPerSec":…}],
  "processes":[{"pid":…,"name":"…","cpuPercent":…,"rssBytes":…,"footprintBytes":…,
                "diskReadBytesPerSec":…,"diskWriteBytesPerSec":…}],
+ "sensors":{"temperatures":[{"celsius":…,"sensor":"PMU tdev2"},…],
+            "gpuUtilizationPercent":…,"gpuPowerWatts":…,
+            "fans":[{"name":"Fan 1","rpm":…}],"unavailable":{}},
  "timestampMs":…,"uptimeSeconds":…}
 ```
 
 Rates are derived from the difference between two reads of a cumulative
 counter, so the first sample of any run reports the counters it could only
 measure absolutely, not rates.
+
+## Sensors
+
+On Apple Silicon, xnumeter also reports the hottest of the exposed HID
+temperature sensors, GPU utilization, GPU power and per-fan RPM. The sensor
+layer is merged from [heatpeek](https://github.com/AyaseEli-Bing/heatpeek) and
+shares the same `Sampler` as the rest of the readout.
+
+- Temperature is cached for 5 s; GPU, power and fan readings refresh at most
+  every 0.4 s. `--once` takes a second sample after 500 ms so GPU power has a
+  counter delta to divide by.
+- A source that cannot be read is `null` (or listed under `unavailable` in
+  JSON) and renders as `unavailable:` in the text view. `--once` still exits 0.
+- The TUI and the menu-bar title mark temperatures at or above 85 °C with `▲`;
+  the TUI row also turns red. This is a readout, not an alarm.
 
 ## Menu-bar app
 
@@ -92,16 +123,18 @@ make app
 open XnumeterApp.app
 ```
 
-An `NSStatusItem` in the menu bar shows `↓ rx ↑ tx` for the busiest interface;
-left-click toggles the dashboard window, right-click opens its menu. The
-dashboard draws CPU / memory / swap / disk gauges, a 120-sample rolling network
-graph, and the top interfaces and processes, refreshing once per second. It
-shares `Sampler.swift` with the CLI rather than reimplementing the sampling.
+An `NSStatusItem` in the menu bar shows `↓ rx ↑ tx` for the busiest interface
+and the hottest temperature (with `▲` at 85 °C or above); left-click toggles
+the dashboard window, right-click opens its menu. The dashboard draws CPU /
+memory / swap / disk / temperature / GPU gauges, fan speeds, a 120-sample
+rolling network graph, and the top interfaces and processes, refreshing once
+per second. It shares `Sampler.swift` with the CLI rather than reimplementing
+the sampling.
 
 The dashboard follows the system language and ships English and Simplified
-Chinese tables (`Sources/XnumeterApp/*.lproj`). The terminal UI stays ASCII on
-purpose: its columns are aligned by character count, and CJK glyphs are
-double-width.
+Chinese tables (`Sources/XnumeterApp/*.lproj`). The terminal UI uses
+single-width characters only: its columns are aligned by character count, and
+CJK glyphs are double-width, so translated labels are avoided there.
 
 To preview another language without changing your system settings:
 
@@ -119,6 +152,15 @@ defaults delete local.xnumeter.app AppleLanguages               # follow the sys
 | Filesystems | `getfsstat` |
 | Network counters | `sysctl NET_RT_IFLIST2` |
 | Processes | `proc_listpids` + `proc_pid_rusage` |
+| Temperature | `IOHIDEventSystemClient*` services, usage page `0xff00` / usage `0x0005` |
+| GPU utilization | `IOAccelerator` registry `PerformanceStatistics` |
+| GPU power | `IOReport` `Energy Model`, `GPU Energy` channel |
+| Fan speed | `AppleSMC` user client, keys `F0Ac`…`F5Ac` |
+
+The HID and IOReport entry points have no public headers; xnumeter resolves
+them with `dlopen`/`dlsym` instead of shipping a private bridging header. The
+sensor sources are designed around Apple Silicon; on Intel they may report
+`unavailable`.
 
 ## Known limits
 
@@ -135,6 +177,18 @@ defaults delete local.xnumeter.app AppleLanguages               # follow the sys
   has no rate to show; that is reported as `-`, not as a measurement.
 - **Per-process CPU is a rate over the sampling window**, not a lifetime
   average, so a process that finished between two samples can briefly read 0.
+- **No CPU power.** On Apple Silicon only the GPU energy channel advances while
+  polling; the CPU/ANE/DRAM counters stay static, so the power figure is GPU-only.
+- **The fan can read 0 RPM at idle for a long time.** That is the machine's
+  thermal policy, not a missing reading; values outside 0…15000 are discarded.
+- **GPU utilization is not comparable with Activity Monitor.** The kernel
+  counter includes window-server work, so an idle desktop can report 60–80 %.
+  Treat it as a trend, not "your" work.
+- **Temperature is the hottest of ~44 sensors**, not a single CPU temperature;
+  Apple publishes no such thing on Apple Silicon, and which sensor tracks load
+  varies with workload.
+- **The 85 °C marker is a readout, not an alarm.** xnumeter never notifies,
+  beeps, throttles, or changes fan speed.
 - **Non-root users see only their own processes.** A plain user session cannot
   inspect processes owned by other users or root, so those pids are skipped;
   xnumeter prints one line to stderr with that count, once per run. Processes
@@ -151,9 +205,10 @@ defaults delete local.xnumeter.app AppleLanguages               # follow the sys
 Cross-checks the running binary against `netstat`, `vm_stat`, `sysctl` and
 `top`, calibrates CPU percentage against a single-threaded busy loop (must
 land near 100 % of one core), verifies every reported rate against its own byte
-deltas, asserts the interface set has no loopback and no duplicates, and checks
-that the text snapshot contains each gauge and table header. Ends with
-`ALL CHECKS PASSED`.
+deltas, asserts the interface set has no loopback and no duplicates, checks
+that the text snapshot contains each gauge and table header, and validates the
+sensors object (temperature plausibility, GPU 0–100 %, fan RPM range, GPU power)
+when a source is present. Ends with `ALL CHECKS PASSED`.
 
 ## Contributing
 

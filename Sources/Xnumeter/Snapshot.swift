@@ -56,6 +56,54 @@ struct ProcSample: Codable, Identifiable {
     var diskWriteBytesPerSec: Double
 }
 
+struct TemperatureReading: Codable {
+    var sensor: String
+    var celsius: Double
+}
+
+struct FanReading: Codable, Identifiable {
+    var id: String { name }
+    var name: String
+    var rpm: Double
+}
+
+/// Apple Silicon sensor readings, merged from heatpeek.
+struct SensorSample: Codable {
+    var temperatures: [TemperatureReading] = []
+    var gpuUtilizationPercent: Double?
+    var gpuPowerWatts: Double?
+    var fans: [FanReading] = []
+    var unavailable: [String: String] = [:]
+
+    var maxTemperature: TemperatureReading? {
+        temperatures.max { $0.celsius < $1.celsius }
+    }
+
+    var maxTemperatureCelsius: Double? { maxTemperature?.celsius }
+
+    var averageTemperatureCelsius: Double? {
+        guard !temperatures.isEmpty else { return nil }
+        return temperatures.map(\.celsius).reduce(0, +) / Double(temperatures.count)
+    }
+
+    var maxFanRPM: Double? { fans.map(\.rpm).max() }
+
+    private enum CodingKeys: String, CodingKey {
+        case temperatures, gpuUtilizationPercent, gpuPowerWatts, fans, unavailable
+    }
+
+    /// Keep every key present, as null when a source is unavailable, so the JSON
+    /// shape does not depend on the hardware.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(temperatures, forKey: .temperatures)
+        try container.encode(gpuUtilizationPercent, forKey: .gpuUtilizationPercent)
+        try container.encode(gpuPowerWatts, forKey: .gpuPowerWatts)
+        try container.encode(fans, forKey: .fans)
+        try container.encode(unavailable, forKey: .unavailable)
+    }
+}
+
 struct Snapshot: Codable {
     var timestampMs: Int64
     var hostName: String
@@ -65,6 +113,7 @@ struct Snapshot: Codable {
     var disks: [DiskSample]
     var net: [NetSample]
     var processes: [ProcSample]
+    var sensors: SensorSample = SensorSample()
 }
 
 enum SortKey: String, Codable {
