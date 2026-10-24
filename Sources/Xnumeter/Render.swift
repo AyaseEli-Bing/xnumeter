@@ -39,6 +39,7 @@ final class Renderer {
         for net in snapshot.net.prefix(3) {
             out.append(netLine(net, width))
         }
+        out.append(contentsOf: sensorLines(snapshot.sensors, width))
 
         out.append("")
         out.append(processHeader(options))
@@ -178,6 +179,56 @@ final class Renderer {
     private func trim(_ v: Double) -> String { String(format: "%.0f", v) }
     private func fmt(_ v: Double) -> String { String(format: "%.2f", v) }
 
+    // MARK: - Sensors
+
+    private func sensorLines(_ sensors: SensorSample, _ width: Int) -> [String] {
+        var out: [String] = []
+
+        let maxTemp = sensors.maxTemperature
+        let hot = maxTemp.map { $0.celsius >= 85 } ?? false
+        let tempDetail: String
+        if let maxTemp {
+            let marker = hot ? "▲ " : ""
+            let avg = sensors.averageTemperatureCelsius.map { String(format: "%.1f", $0) } ?? "--"
+            tempDetail = "\(marker)max \(String(format: "%.1f", maxTemp.celsius))°C (\(maxTemp.sensor))  avg \(avg)°C  \(sensors.temperatures.count) sensors"
+        } else {
+            tempDetail = "unavailable: \(sensors.unavailable["temperature"] ?? "no sensors")"
+        }
+        let tempLine = clip("TEMP", tempDetail, width)
+        out.append(hot ? paint("31", tempLine) : tempLine)
+
+        var gpuParts: [String] = []
+        if let utilization = sensors.gpuUtilizationPercent {
+            gpuParts.append("util \(String(format: "%.0f", utilization))%")
+        }
+        if let watts = sensors.gpuPowerWatts {
+            gpuParts.append("power \(String(format: "%.2f", watts))W")
+        }
+        if gpuParts.isEmpty {
+            let reason = sensors.unavailable["gpu"] ?? sensors.unavailable["power"] ?? "no GPU data"
+            gpuParts.append("unavailable: \(reason)")
+        }
+        out.append(clip("GPU", gpuParts.joined(separator: "  "), width))
+
+        let fanDetail: String
+        if sensors.fans.isEmpty {
+            fanDetail = "unavailable: \(sensors.unavailable["fan"] ?? "no fan data")"
+        } else {
+            fanDetail = sensors.fans
+                .map { "\($0.name) \(String(format: "%.0f", $0.rpm)) RPM" }
+                .joined(separator: "  ")
+        }
+        out.append(clip("FAN", fanDetail, width))
+        return out
+    }
+
+    private func clip(_ label: String, _ detail: String, _ width: Int) -> String {
+        let head = Format.column(label, 4) + " "
+        let budget = width - head.count
+        let tail = detail.count > budget ? String(detail.prefix(Swift.max(1, budget - 3))) + "..." : detail
+        return head + tail
+    }
+
     func dashboardLines(_ snapshot: Snapshot, _ history: SampleHistory, _ options: ViewOptions) -> [String] {
         let width = Swift.max(60, options.width)
         var out: [String] = [headerLine(snapshot, width), dim(String(repeating: "-", count: width))]
@@ -193,6 +244,35 @@ final class Renderer {
             label: "MEM",
             suffix: Format.percent(snapshot.mem.percent),
             sparkline: sparkline(history.mem, max: 100.0, width: plotWidth),
+            width: width
+        ))
+
+        let sensors = snapshot.sensors
+        let tempSuffix: String
+        if let maxTemp = sensors.maxTemperature {
+            let marker = maxTemp.celsius >= 85 ? "▲ " : ""
+            tempSuffix = "\(marker)\(String(format: "%.1f", maxTemp.celsius))°C"
+        } else {
+            tempSuffix = "--"
+        }
+        out.append(dashboardRow(
+            label: "TEMP",
+            suffix: tempSuffix,
+            sparkline: sparkline(history.temp, max: 110.0, width: plotWidth),
+            width: width
+        ))
+
+        let gpuSuffix: String
+        if let gpu = sensors.gpuUtilizationPercent {
+            let power = sensors.gpuPowerWatts.map { String(format: " %.2fW", $0) } ?? ""
+            gpuSuffix = "\(Int(gpu.rounded()))%\(power)"
+        } else {
+            gpuSuffix = "--"
+        }
+        out.append(dashboardRow(
+            label: "GPU",
+            suffix: gpuSuffix,
+            sparkline: sparkline(history.gpu, max: 100.0, width: plotWidth),
             width: width
         ))
 

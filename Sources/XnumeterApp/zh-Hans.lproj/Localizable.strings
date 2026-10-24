@@ -4,6 +4,10 @@
 "DISK" = "磁盘";
 "NET" = "网络";
 "PROC" = "进程";
+"TEMP" = "温度";
+"GPU" = "GPU";
+"FAN" = "风扇";
+"SENSORS" = "传感器";
 
 /* Host line */
 "up %@" = "运行 %@";

@@ -28,6 +28,7 @@ final class Sampler {
     private var prevProcs: [Int32: ProcState] = [:]
     private var didReportInvisibleProcesses = false
     private var prevNet: [String: NetCounters] = [:]
+    private let sensorSampler = SensorSampler()
 
     // proc_pid_rusage reports cpu time in mach absolute time units, not nanoseconds
     // (24 MHz ticks on Apple Silicon), so scale by the timebase before diffing.
@@ -40,6 +41,7 @@ final class Sampler {
     private let coreCount = ProcessInfo.processInfo.activeProcessorCount
 
     func sample(sort: SortKey, top: Int) -> Snapshot {
+        let now = Date()
         let wallNs = monotonicNs()
         let prevWallNsValue = prevWallNs
         let spanNs = prevWallNsValue.map { wallNs > $0 ? wallNs - $0 : 0 } ?? 0
@@ -73,14 +75,15 @@ final class Sampler {
         prevWallNs = wallNs
 
         return Snapshot(
-            timestampMs: Int64(Date().timeIntervalSince1970 * 1000),
+            timestampMs: Int64(now.timeIntervalSince1970 * 1000),
             hostName: ProcessInfo.processInfo.hostName,
             uptimeSeconds: uptimeSeconds(),
             cpu: cpu,
             mem: memorySample(),
             disks: diskSamples(),
             net: networkSample(spanSec: spanSec),
-            processes: processSample(sort: sort, top: top, spanSec: spanSec)
+            processes: processSample(sort: sort, top: top, spanSec: spanSec),
+            sensors: sensorSampler.sample(now: now)
         )
     }
 

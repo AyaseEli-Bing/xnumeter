@@ -61,8 +61,15 @@ final class MonitorModel: NSObject, ObservableObject {
     }
 
     var statusTitle: String {
-        guard let top = snapshot?.net.first else { return "↓ - ↑ -" }
-        return "↓\(Format.rate(top.rxBytesPerSec)) ↑\(Format.rate(top.txBytesPerSec))"
+        let network: String
+        if let top = snapshot?.net.first {
+            network = "↓\(Format.rate(top.rxBytesPerSec)) ↑\(Format.rate(top.txBytesPerSec))"
+        } else {
+            network = "↓ - ↑ -"
+        }
+        guard let temp = snapshot?.sensors.maxTemperature else { return network }
+        let marker = temp.celsius >= 85 ? "▲" : ""
+        return "\(network)  \(marker)\(Int(temp.celsius.rounded()))°"
     }
 }
 
@@ -204,6 +211,51 @@ struct DashboardView: View {
                 }
             }
             .padding(.top, 12)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text(localized("SENSORS"))
+                    .font(.system(size: 11, weight: .bold))
+                if let maxTemp = snapshot.sensors.maxTemperature {
+                    let average = snapshot.sensors.averageTemperatureCelsius
+                        .map { String(format: "%.1f", $0) } ?? "--"
+                    GaugeRow(
+                        label: "TEMP",
+                        percent: maxTemp.celsius / 110 * 100,
+                        detail: "max \(String(format: "%.1f", maxTemp.celsius))°C  (\(maxTemp.sensor))  avg \(average)°C  \(snapshot.sensors.temperatures.count) sensors"
+                    )
+                }
+                if let gpu = snapshot.sensors.gpuUtilizationPercent {
+                    let power = snapshot.sensors.gpuPowerWatts
+                        .map { String(format: "%.2fW", $0) } ?? "--"
+                    GaugeRow(
+                        label: "GPU",
+                        percent: gpu,
+                        detail: "power \(power)"
+                    )
+                }
+                if !snapshot.sensors.fans.isEmpty {
+                    HStack(spacing: 8) {
+                        Text(localized("FAN"))
+                            .font(.system(size: 11, weight: .bold))
+                            .frame(width: 42, alignment: .leading)
+                        Text(snapshot.sensors.fans
+                            .map { "\($0.name) \(String(format: "%.0f", $0.rpm)) RPM" }
+                            .joined(separator: "    "))
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if !snapshot.sensors.unavailable.isEmpty {
+                    Text(snapshot.sensors.unavailable
+                        .sorted { $0.key < $1.key }
+                        .map { "\($0.key): \($0.value)" }
+                        .joined(separator: "   "))
+                        .font(.system(size: 9))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(2)
+                }
+            }
+            .padding(.top, 14)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {

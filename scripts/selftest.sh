@@ -72,6 +72,23 @@ used_pct = 100.0 * d["mem"]["usedBytes"] / mem
 ok_used = 0 < d["mem"]["usedBytes"] < mem
 print("  %s used memory in range (%.1f%%)" % ("ok  " if ok_used else "FAIL", used_pct)); bad |= not ok_used
 
+sensors = d.get("sensors")
+ok_sensors = isinstance(sensors, dict)
+print("  %s sensors object present" % ("ok  " if ok_sensors else "FAIL")); bad |= not ok_sensors
+if ok_sensors:
+    temps = sensors.get("temperatures") or []
+    ok_temp = all(-20 <= t.get("celsius", -999) <= 150 for t in temps)
+    print("  %s sensor temperatures plausible (%d sensors)" % ("ok  " if ok_temp else "FAIL", len(temps))); bad |= not ok_temp
+    gpu = sensors.get("gpuUtilizationPercent")
+    ok_gpu = gpu is None or 0 <= gpu <= 100
+    print("  %s gpu utilization in range (%s)" % ("ok  " if ok_gpu else "FAIL", gpu)); bad |= not ok_gpu
+    fans = sensors.get("fans") or []
+    ok_fans = all(0 <= f.get("rpm", -1) <= 15000 for f in fans)
+    print("  %s fan rpm in range (%d fans)" % ("ok  " if ok_fans else "FAIL", len(fans))); bad |= not ok_fans
+    power = sensors.get("gpuPowerWatts")
+    ok_power = power is None or 0 <= power <= 200
+    print("  %s gpu power plausible (%s)" % ("ok  " if ok_power else "FAIL", power)); bad |= not ok_power
+
 def netstat_link(name):
     """Cumulative RX/TX for one interface, read from the OS's own counter viewer."""
     lines = out(["netstat", "-ibn"]).split("\n")
@@ -205,7 +222,7 @@ PY
 
 echo "4) dashboard mode"
 DASH=$($BIN --dashboard --once --no-color) || bad "dashboard mode exited non-zero"
-for row in '^CPU ' '^MEM ' '^NET '; do
+for row in '^CPU ' '^MEM ' '^NET ' '^TEMP ' '^GPU '; do
   printf '%s' "$DASH" | grep -q "$row" && ok "dashboard contains $row" || bad "dashboard missing $row"
 done
 printf '%s' "$DASH" | grep -q "g list" && ok "dashboard footer shows g list" || bad "dashboard footer missing g list"
@@ -214,7 +231,7 @@ echo "5) text mode"
 OUT=$($BIN --once --no-color) || bad "text mode exited non-zero"
 # Anchored: an unanchored CPU also matches the CPU% column header and DISK matches
 # DISK-R/DISK-W, so the gauge rows could vanish and these checks would still pass.
-for row in '^CPU ' '^MEM ' '^SWAP ' '^DISK '; do
+for row in '^CPU ' '^MEM ' '^SWAP ' '^DISK ' '^TEMP ' '^GPU ' '^FAN '; do
   printf '%s' "$OUT" | grep -q "$row" && ok "text snapshot contains gauge $row" || bad "text snapshot missing gauge $row"
 done
 for col in PID NAME CPU% RSS FOOT; do
