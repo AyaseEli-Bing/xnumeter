@@ -28,7 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         let hosting = NSHostingView(rootView: DashboardView(model: model))
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 510),
+            contentRect: NSRect(x: 0, y: 0, width: 760, height: 720),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
@@ -36,7 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window.title = "xnumeter"
         window.delegate = self
         window.contentView = hosting
-        window.setContentSize(hosting.fittingSize)
+        window.minSize = NSSize(width: 660, height: 560)
+        window.setContentSize(NSSize(width: 760, height: 720))
         window.center()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

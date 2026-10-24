@@ -8,6 +8,7 @@
 "GPU" = "GPU";
 "FAN" = "风扇";
 "SENSORS" = "传感器";
+"STORAGE" = "存储";
 
 /* Host line */
 "up %@" = "运行 %@";
@@ -25,6 +26,7 @@
 "TX" = "发送";
 "RX TOTAL" = "接收累计";
 "TX TOTAL" = "发送累计";
+"TOTAL" = "总计";
 "PID" = "PID";
 "NAME" = "名称";
 "CPU%" = "CPU%";

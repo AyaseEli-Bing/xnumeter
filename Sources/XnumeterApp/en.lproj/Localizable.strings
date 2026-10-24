@@ -11,6 +11,7 @@
 "GPU" = "GPU";
 "FAN" = "FAN";
 "SENSORS" = "SENSORS";
+"STORAGE" = "STORAGE";
 
 "sampling…" = "sampling…";
 "green = rx, orange = tx" = "green = rx, orange = tx";
@@ -23,6 +24,7 @@
 "TX" = "TX";
 "RX TOTAL" = "RX TOTAL";
 "TX TOTAL" = "TX TOTAL";
+"TOTAL" = "TOTAL";
 "PID" = "PID";
 "NAME" = "NAME";
 "CPU%" = "CPU%";

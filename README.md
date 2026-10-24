@@ -16,8 +16,9 @@ The point of building it on raw kernel calls instead of wrapping `top` or
 they can be checked against them. `scripts/selftest.sh` does exactly that and
 fails the build when xnumeter and the OS disagree.
 
-![The menu-bar dashboard: CPU, memory, swap and disk gauges, a rolling network
-graph over the busiest interface, and the top interfaces and processes](docs/screenshot.png)
+![The xnumeter dashboard: CPU, memory, temperature and GPU tiles with rolling
+sparklines, a network graph, the hottest sensors and fan speed, storage bars, and
+the top processes](docs/screenshot.png)
 
 ## Requirements
 
@@ -125,11 +126,11 @@ open XnumeterApp.app
 
 An `NSStatusItem` in the menu bar shows `↓ rx ↑ tx` for the busiest interface
 and the hottest temperature (with `▲` at 85 °C or above); left-click toggles
-the dashboard window, right-click opens its menu. The dashboard draws CPU /
-memory / swap / disk / temperature / GPU gauges, fan speeds, a 120-sample
-rolling network graph, and the top interfaces and processes, refreshing once
-per second. It shares `Sampler.swift` with the CLI rather than reimplementing
-the sampling.
+the dashboard window, right-click opens its menu. The dashboard shows four
+headline tiles (CPU, memory, temperature, GPU) with rolling sparklines, a
+storage panel, the hottest sensors and fan speeds, a 120-sample network graph
+with the top interfaces, and the top processes, refreshing once per second. It
+shares `Sampler.swift` with the CLI rather than reimplementing the sampling.
 
 The dashboard follows the system language and ships English and Simplified
 Chinese tables (`Sources/XnumeterApp/*.lproj`). The terminal UI uses
